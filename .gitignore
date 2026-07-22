@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# Training outputs
+outputs/
+logs/
+eval_results/
+
+# Data
+data/
+
+# Synthetic generated data (if reproducible)
+synthetic/
+
+# Accelerate caches
+.cache/
+
+# Misc
+*.log
+.DS_Store
