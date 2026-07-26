@@ -151,3 +151,7 @@ MERGED_DPO_PATH = DATA_DIR / "merged_dpo.jsonl"
 TRAIN_DPO_PATH = DATA_DIR / "train_dpo.jsonl"
 
 VAL_DPO_PATH = DATA_DIR / "val_dpo.jsonl"
+
+INFERENCE_BACKEND = "transformers"
+VLLM_BASE_URL = "http://localhost:8031/v1"
+VLLM_MODEL = "translategemma-27b-base"

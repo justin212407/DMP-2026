@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # ── Formatter type alias ───────────────────────────────────────────────────────
 
 Example  = dict[str, Any]
-Formatter = Callable[[Example, Optional[Any]], str]
+Formatter = Callable[[Example, Optional[Any]], Any]
 
 
 # ── Per-family formatters ──────────────────────────────────────────────────────
@@ -96,11 +96,7 @@ def _format_translategemma(
         }
     ]
 
-    return tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
+    return messages
 
 def _format_generic(example: Example, tokenizer=None,) -> str:
     """

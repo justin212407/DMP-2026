@@ -17,7 +17,14 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import torch
+import json
 from transformers import PreTrainedModel, PreTrainedTokenizer
+import requests
+
+VLLM_URL = "http://localhost:8031/v1/chat/completions"
+VLLM_MODEL = "translategemma-27b-base"
+
+USE_VLLM = True
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +57,10 @@ class GenerationConfig:
 
 # ── Core inference functions ───────────────────────────────────────────────────
 
-def generate_one(
+def _generate_transformers(
     model:     PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
-    prompt:    str,
+    prompt:    Any,
     config:    GenerationConfig | None = None,
     model_family: str = "qwen",
 ) -> str:
@@ -91,6 +98,13 @@ def generate_one(
     if "gemma" in model_family.lower():
         tokenizer_kwargs["add_special_tokens"] = False
 
+    if isinstance(prompt, list):
+        prompt = tokenizer.apply_chat_template(
+            prompt,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+
     encoded = tokenizer(
         prompt,
         **tokenizer_kwargs,
@@ -127,11 +141,62 @@ def generate_one(
     generated = tokenizer.decode(new_ids, skip_special_tokens=True)
     return generated.strip()
 
+def _generate_vllm(
+    prompt: Any,
+    config: GenerationConfig,
+) -> str:
+    payload = {
+        "model": VLLM_MODEL,
+        "messages": prompt,
+        "temperature": config.temperature,
+        "max_completion_tokens": config.max_new_tokens,
+    }
+
+    print("=" * 80)
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    print("=" * 80)
+
+    response = requests.post(
+        VLLM_URL,
+        json=payload,
+        timeout=300,
+    )
+
+    if response.status_code != 200:
+        raise RuntimeError(response.text)
+
+    return response.json()["choices"][0]["message"]["content"].strip()
+
+def generate_one(
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizer,
+    prompt: Any,
+    config: GenerationConfig | None = None,
+    model_family: str = "qwen",
+) -> str:
+
+    if config is None:
+        config = GenerationConfig()
+
+    if USE_VLLM:
+        return _generate_vllm(
+            prompt=prompt,
+            config=config,
+        )
+
+    return _generate_transformers(
+        model=model,
+        tokenizer=tokenizer,
+        prompt=prompt,
+        config=config,
+        model_family=model_family,
+    )
+
 
 def generate_batch(
     model:        PreTrainedModel,
     tokenizer:    PreTrainedTokenizer,
-    prompts:      list[str],
+    prompts:      list[Any],
     config:       GenerationConfig | None = None,
     model_family: str = "qwen",
     log_every:    int = 20,

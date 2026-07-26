@@ -19,8 +19,6 @@ eval_results/
 # Data
 data/
 
-# Synthetic generated data (if reproducible)
-synthetic/
 
 # Accelerate caches
 .cache/

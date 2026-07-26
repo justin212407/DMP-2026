@@ -14,7 +14,11 @@ Responsibilities:
 
 from __future__ import annotations
 
-from evaluation.inference import GenerationConfig, generate_one
+from evaluation.inference import (
+    GenerationConfig,
+    generate_one,
+    USE_VLLM,
+)
 from evaluation.loader import load_base_model, load_tokenizer
 from evaluation.prompts import build_prompt
 
@@ -41,8 +45,11 @@ class Translator:
 
         self.tokenizer = load_tokenizer(MODEL_NAME)
 
-        self.model = load_base_model(MODEL_NAME)
-
+        if USE_VLLM:
+            self.model = None
+        else:
+            self.model = load_base_model(MODEL_NAME)
+            
         self.config = GenerationConfig(
             max_new_tokens=MAX_NEW_TOKENS,
             do_sample=DO_SAMPLE,
