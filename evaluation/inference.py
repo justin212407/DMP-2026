@@ -21,7 +21,7 @@ import json
 from transformers import PreTrainedModel, PreTrainedTokenizer
 import requests
 
-VLLM_URL = "http://localhost:8031/v1/chat/completions"
+VLLM_URL = "http://localhost:8031/v1/completions"
 VLLM_MODEL = "translategemma-27b-base"
 
 USE_VLLM = True
@@ -147,11 +147,10 @@ def _generate_vllm(
 ) -> str:
     payload = {
         "model": VLLM_MODEL,
-        "messages": prompt,
+        "prompt": prompt,
         "temperature": config.temperature,
-        "max_completion_tokens": config.max_new_tokens,
+        "max_tokens": config.max_new_tokens,
     }
-
     print("=" * 80)
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     print("=" * 80)
@@ -165,7 +164,7 @@ def _generate_vllm(
     if response.status_code != 200:
         raise RuntimeError(response.text)
 
-    return response.json()["choices"][0]["message"]["content"].strip()
+    return response.json()["choices"][0]["text"].strip()
 
 def generate_one(
     model: PreTrainedModel,

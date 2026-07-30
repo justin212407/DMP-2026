@@ -40,6 +40,7 @@ from synthetic.utils import (
 )
 from synthetic.glossary_enforcer import check_glossary
 from synthetic.glossary_rewriter import rewrite_translation
+import json
 
 
 def load_completed() -> set[tuple[str, str]]:
@@ -62,7 +63,39 @@ def load_completed() -> set[tuple[str, str]]:
             row["english"],
         )
         for row in rows
+        if "rewritten" in row
     }
+
+def remove_failed_rows() -> None:
+    """
+   Remove failed translations so retries replace them
+    instead of creating duplicates.
+    """
+
+    if not TRANSLATIONS_PATH.exists():
+        return
+
+    rows = load_jsonl(TRANSLATIONS_PATH)
+
+    rows = [
+        row
+        for row in rows
+        if "error" not in row
+    ]
+
+    with TRANSLATIONS_PATH.open(
+        "w",
+        encoding="utf8",
+    ) as f:
+
+        for row in rows:
+            f.write(
+                json.dumps(
+                    row,
+                    ensure_ascii=False,
+                )
+            )
+            f.write("\n")
 
 
 def append_row(row: dict) -> None:
@@ -93,6 +126,8 @@ def append_row(row: dict) -> None:
 
 
 def main() -> None:
+
+    remove_failed_rows()
 
     synthetic_rows = load_jsonl(
         SYNTHETIC_QUERIES_PATH,

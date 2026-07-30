@@ -72,31 +72,34 @@ def _format_qwen(example: Example, tokenizer: Any | None = None,) -> str:
 def _format_translategemma(
     example: Example,
     tokenizer=None,
-) -> str:
-    if tokenizer is None:
-        raise ValueError(
-            "TranslateGemma prompt formatting requires a tokenizer."
-        )
+) -> str:       
 
     source = example["prompt"].strip()
 
-    text = source
+    instruction = (
+        "You are a professional English (en) to Gujarati (gu) translator. "
+        "Your goal is to accurately convey the meaning and nuances of the original "
+        "English text while adhering to Gujarati grammar, vocabulary, and cultural "
+        "sensitivities.\n"
+        "Produce only the Gujarati translation, without any additional explanations "
+        "or commentary.\n"
+        "Preserve newlines, paragraph breaks, and list structure (bullets, numbered "
+        "items, markdown) exactly as in the source."
+    )
 
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "source_lang_code": "en",
-                    "target_lang_code": "gu",
-                    "text": text,
-                }
-            ],
-        }
-    ]
+    instruction += (
+        "\n\nPlease translate the following English text into Gujarati:\n\n\n"
+        f"{source}"
+    )
 
-    return messages
+    prompt = (
+        "<bos><start_of_turn>user\n"
+        f"{instruction}"    
+        "<end_of_turn>\n"
+        "<start_of_turn>model\n"
+    )
+
+    return prompt
 
 def _format_generic(example: Example, tokenizer=None,) -> str:
     """
